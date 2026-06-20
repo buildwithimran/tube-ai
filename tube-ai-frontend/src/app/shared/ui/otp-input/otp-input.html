@@ -1,0 +1,8 @@
+<div class="flex justify-center gap-2" (paste)="onPaste($event)">
+  @for (d of digits(); track $index; let i = $index) {
+    <input #box type="text" inputmode="numeric" maxlength="1" [value]="d"
+      (input)="onInput(i, $event)" (keydown)="onKeydown(i, $event)"
+      [attr.aria-label]="'Digit ' + (i + 1)"
+      class="h-14 w-12 rounded-2xl border border-black/10 bg-white/70 text-center text-xl font-semibold outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/25 dark:border-white/10 dark:bg-white/5 dark:text-white" />
+  }
+</div>

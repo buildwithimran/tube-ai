@@ -1,0 +1,75 @@
+<div class="mx-auto max-w-4xl space-y-6">
+  <h1 class="font-display text-2xl font-bold">Admin</h1>
+
+  @if (metrics(); as m) {
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div class="card text-center"><div class="text-2xl font-bold">{{ m.users }}</div><div class="text-xs text-neutral-500">Users</div></div>
+      <div class="card text-center"><div class="text-2xl font-bold">{{ m.videos }}</div><div class="text-xs text-neutral-500">Videos</div></div>
+      <div class="card text-center"><div class="text-2xl font-bold">{{ m.generations }}</div><div class="text-xs text-neutral-500">Generations</div></div>
+      <div class="card text-center"><div class="text-2xl font-bold">{{ m.extractsToday }}</div><div class="text-xs text-neutral-500">Extracts today</div></div>
+      <div class="card text-center"><div class="text-2xl font-bold">{{ m.generationsToday }}</div><div class="text-xs text-neutral-500">Gens today</div></div>
+      <div class="card text-center"><div class="text-2xl font-bold">{{ openFeedbackCount() }}</div><div class="text-xs text-neutral-500">Open feedback</div></div>
+    </div>
+  }
+
+  <div class="card">
+    <h2 class="font-semibold">Users</h2>
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-neutral-500">
+            <th class="py-2">Email</th><th>Plan</th><th>Role</th><th class="text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of users(); track u._id) {
+            <tr class="border-t border-neutral-200 dark:border-neutral-800">
+              <td class="py-2">{{ u.email }}</td>
+              <td><span class="font-medium text-brand-500">{{ u.planKey }}</span></td>
+              <td>{{ u.role }}</td>
+              <td class="text-right">
+                <button type="button" (click)="setPlan(u._id, u.planKey === 'pro' ? 'free' : 'pro')"
+                  class="text-brand-500 hover:underline">
+                  {{ u.planKey === 'pro' ? 'Downgrade' : 'Make Pro' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Feedback inbox -->
+  <div class="card">
+    <div class="flex items-center justify-between">
+      <h2 class="font-semibold">Feedback</h2>
+      <span class="text-xs text-neutral-500">{{ openFeedbackCount() }} open</span>
+    </div>
+    <ul class="mt-3 space-y-3">
+      @for (f of feedback(); track f._id) {
+        <li class="rounded-xl border border-neutral-200 p-3 dark:border-neutral-800"
+          [class.opacity-60]="f.status === 'resolved'">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm">{{ f.message }}</p>
+              <p class="mt-1 text-xs text-neutral-500">
+                <span class="rounded-full bg-black/5 px-2 py-0.5 dark:bg-white/10">{{ f.category }}</span>
+                <span class="ml-2">{{ f.user?.email || 'Anonymous' }}</span>
+              </p>
+            </div>
+            <button type="button"
+              (click)="setFeedbackStatus(f._id, f.status === 'open' ? 'resolved' : 'open')"
+              class="shrink-0 text-sm font-medium"
+              [class.text-emerald-500]="f.status === 'open'"
+              [class.text-neutral-400]="f.status === 'resolved'">
+              {{ f.status === 'open' ? 'Resolve' : 'Reopen' }}
+            </button>
+          </div>
+        </li>
+      } @empty {
+        <li class="text-sm text-neutral-500">No feedback yet.</li>
+      }
+    </ul>
+  </div>
+</div>

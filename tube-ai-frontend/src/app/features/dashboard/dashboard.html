@@ -1,0 +1,192 @@
+<div class="mx-auto max-w-3xl">
+  <h1 class="font-display text-2xl font-bold sm:text-3xl">
+    Hi {{ auth.user()?.name }} 👋
+  </h1>
+  <p class="mt-1 text-neutral-500">Paste a YouTube link and get a Learning Pack in seconds.</p>
+
+  <!-- Paste box -->
+  <div class="card mt-6 animate-fade-rise">
+    <label for="url" class="mb-2 flex items-center gap-2 text-sm font-medium">
+      <lucide-icon name="youtube" class="h-4 w-4 text-brand-400"></lucide-icon>
+      YouTube URL
+    </label>
+    <div class="flex flex-col gap-2 sm:flex-row">
+      <input id="url" type="url" [value]="url()" (input)="url.set($any($event.target).value)"
+        (keyup.enter)="process()"
+        placeholder="https://www.youtube.com/watch?v=…"
+        [disabled]="stage() === 'working'"
+        class="input min-w-0 flex-1" />
+      <button type="button" class="btn btn-primary px-5" (click)="process()"
+        [disabled]="stage() === 'working' || !url()">
+        @if (stage() === 'working') {
+          <lucide-icon name="loader" class="h-4 w-4 animate-spin"></lucide-icon> Working…
+        } @else {
+          <lucide-icon name="sparkles" class="h-4 w-4"></lucide-icon> Create pack
+        }
+      </button>
+    </div>
+
+    @if (stage() === 'idle') {
+      <button type="button" (click)="useSample()"
+        class="chip mt-3 text-neutral-400 transition hover:text-brand-300">
+        <lucide-icon name="play" class="h-3 w-3"></lucide-icon> Try a sample video
+      </button>
+    }
+
+    <!-- Loud error + retry -->
+    @if (stage() === 'error') {
+      <div class="mt-4 flex items-start gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4">
+        <lucide-icon name="alert-circle" class="mt-0.5 h-5 w-5 shrink-0 text-rose-400"></lucide-icon>
+        <div class="flex-1">
+          <p class="text-sm text-rose-700 dark:text-rose-200">{{ error() }}</p>
+          <button type="button" class="btn btn-ghost mt-3" (click)="retry()">
+            <lucide-icon name="refresh-cw" class="h-4 w-4"></lucide-icon> Try again
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Premium processing timeline -->
+    @if (stage() === 'working') {
+      <div class="mt-5 rounded-2xl border border-black/5 bg-white/50 p-4 dark:border-white/5 dark:bg-white/[0.02]">
+        <div class="mb-4 flex items-center justify-between text-xs text-neutral-500">
+          <span>Building your pack…</span>
+          <span class="font-mono">{{ elapsed() }}s</span>
+        </div>
+        <ol class="space-y-3">
+          @for (step of steps; track step.label; let i = $index) {
+            <li class="flex items-center gap-3">
+              <span [class]="circleClass(i)">
+                @if (stepIcon(i) === 'check') {
+                  <lucide-icon name="check" class="h-4 w-4"></lucide-icon>
+                } @else if (stepIcon(i) === 'loader') {
+                  <lucide-icon name="loader" class="h-4 w-4 animate-spin"></lucide-icon>
+                } @else {
+                  {{ i + 1 }}
+                }
+              </span>
+              <div class="min-w-0">
+                <div class="text-sm font-medium" [class.text-neutral-400]="i > activeStep()">{{ step.label }}</div>
+                @if (i === activeStep()) {
+                  <div class="text-xs text-brand-600 dark:text-brand-300">{{ step.status }}</div>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+      </div>
+    }
+  </div>
+
+  <!-- Search YouTube -->
+  @if (stage() === 'idle') {
+    <div class="card mt-5 animate-fade-rise">
+      <label for="yt-search" class="mb-2 flex items-center gap-2 text-sm font-medium">
+        <lucide-icon name="search" class="h-4 w-4 text-brand-500"></lucide-icon> Or search YouTube
+      </label>
+      <div class="flex gap-2">
+        <input id="yt-search" type="search" [value]="searchQuery()" (input)="searchQuery.set($any($event.target).value)"
+          (keyup.enter)="runSearch()" placeholder="e.g. javascript promises tutorial" class="input min-w-0 flex-1" />
+        <button type="button" class="btn btn-ghost px-4" (click)="runSearch()" [disabled]="searching() || !searchQuery()">
+          @if (searching()) {
+            <lucide-icon name="loader" class="h-4 w-4 animate-spin"></lucide-icon>
+          } @else {
+            <lucide-icon name="search" class="h-4 w-4"></lucide-icon> Search
+          }
+        </button>
+      </div>
+
+      @if (searchResults().length) {
+        <div class="mt-4 grid gap-2">
+          @for (r of searchResults(); track r.youtubeId) {
+            <button type="button" (click)="pick(r)"
+              class="flex items-center gap-3 rounded-xl border border-black/5 p-2 text-left transition hover:border-brand-400 hover:bg-brand-500/5 dark:border-white/5">
+              @if (r.thumbnail) {
+                <img [src]="r.thumbnail" alt="" class="h-12 w-20 shrink-0 rounded-lg object-cover" />
+              }
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-sm font-medium">{{ r.title }}</p>
+                <p class="truncate text-xs text-neutral-500">{{ r.channel }}{{ r.durationText ? ' · ' + r.durationText : '' }}</p>
+              </div>
+              <lucide-icon name="sparkles" class="h-4 w-4 shrink-0 text-brand-500"></lucide-icon>
+            </button>
+          }
+        </div>
+      } @else if (searched() && !searching()) {
+        <p class="mt-3 text-sm text-neutral-500">No results — try different keywords.</p>
+      }
+    </div>
+  }
+
+  <!-- Review due -->
+  @if (reviewDue() > 0) {
+    <a routerLink="/app/review"
+      class="card mt-5 flex items-center gap-3 animate-fade-rise transition hover:-translate-y-0.5 hover:glow">
+      <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-accent-500 text-white">
+        <lucide-icon name="layers" class="h-5 w-5"></lucide-icon>
+      </span>
+      <div class="min-w-0 flex-1">
+        <p class="font-semibold">{{ reviewDue() }} card{{ reviewDue() === 1 ? '' : 's' }} due for review</p>
+        <p class="text-sm text-neutral-500">Strengthen your memory with a quick session.</p>
+      </div>
+      <lucide-icon name="arrow-right" class="h-5 w-5 shrink-0 text-brand-500"></lucide-icon>
+    </a>
+  }
+
+  <!-- Usage meter -->
+  @if (usage(); as u) {
+    <div class="card mt-5 animate-fade-rise">
+      <div class="flex items-center justify-between text-sm">
+        <span class="flex items-center gap-2 font-medium">
+          <lucide-icon name="zap" class="h-4 w-4 text-brand-400"></lucide-icon> Today's usage
+        </span>
+        <span class="text-neutral-500">
+          {{ u.videos.used }}{{ u.videos.limit === -1 ? '' : ' / ' + u.videos.limit }} videos
+        </span>
+      </div>
+      @if (u.videos.limit !== -1) {
+        <div class="mt-2 h-2 overflow-hidden rounded-full bg-neutral-200 dark:bg-white/5">
+          <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500 transition-all"
+            [style.width.%]="pct(u.videos.used, u.videos.limit)"></div>
+        </div>
+        @if (u.videos.remaining === 0) {
+          <p class="mt-2 text-xs text-amber-400">You've used today's free videos. Comes back tomorrow, or upgrade to Pro.</p>
+        }
+      }
+    </div>
+  }
+
+  <!-- Recent packs -->
+  @if (recentLoaded()) {
+    <div class="mt-8">
+      @if (recent().length) {
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="font-display text-lg font-semibold">Recent packs</h2>
+          <a routerLink="/app/library" [queryParams]="{ tab: 'history' }"
+            class="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400">See all →</a>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          @for (r of recent(); track r._id) {
+            <a [routerLink]="['/app/video', r.video?._id]"
+              class="card group animate-fade-rise p-3 transition hover:-translate-y-0.5 hover:shadow-glow">
+              @if (r.video?.thumbnailUrl) {
+                <img [src]="r.video?.thumbnailUrl" alt="" class="mb-3 h-28 w-full rounded-lg object-cover" />
+              } @else {
+                <div class="mb-3 grid h-28 w-full place-items-center rounded-lg bg-gradient-to-br from-brand-500/20 to-accent-500/20">
+                  <lucide-icon name="youtube" class="h-8 w-8 text-brand-300"></lucide-icon>
+                </div>
+              }
+              <p class="truncate text-sm font-medium">{{ r.video?.title || 'Untitled video' }}</p>
+              <p class="truncate text-xs text-neutral-500">{{ r.video?.channel }}</p>
+            </a>
+          }
+        </div>
+      } @else if (stage() === 'idle') {
+        <app-empty-state
+          icon="sparkles"
+          title="Your packs will appear here"
+          message="Paste a YouTube link above to create your first Learning Pack." />
+      }
+    </div>
+  }
+</div>

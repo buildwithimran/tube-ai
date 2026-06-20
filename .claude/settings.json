@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add *)",
+      "Bash(node spikes/transcript-spike.mjs)",
+      "Bash(node spikes/transcript-spike-2.mjs)",
+      "Bash(grep -vE \"YOUTUBEJS|^\\\\s+at |Introspected|JIT|^\\\\s*class |static type|constructor|this\\\\.|^\\\\s+[a-z_]+: \\\\{|^\\\\s+\\\\},?$|^\\\\s+\\\\}\\\\\\)?;?$|github|^\\\\s*$\")",
+      "Bash(pnpm build *)",
+      "Bash(grep -q \"player-script\" .gitignore)",
+      "Bash(printf '\\\\n# ytdl/runtime junk cache files\\\\n*-player-script.js\\\\n*-watch.html\\\\n*-player-api-response.json\\\\n')"
+    ]
+  }
+}

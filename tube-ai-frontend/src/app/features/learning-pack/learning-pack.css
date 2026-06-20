@@ -1,0 +1,4 @@
+/* Learning Pack styles — Tailwind utilities handle most visuals. */
+:host {
+  display: block;
+}

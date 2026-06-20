@@ -1,0 +1,7 @@
+<div class="space-y-3">
+  @for (i of range; track i) {
+    <div
+      class="shimmer h-4 rounded-lg bg-neutral-200 dark:bg-white/5"
+      [style.width.%]="i === range.length - 1 ? 60 : 100"></div>
+  }
+</div>

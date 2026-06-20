@@ -1,0 +1,14 @@
+1: In Auth pages show hide show password icon in inputs.
+2: Email validation:
+Allow only these domains:
+gmail.com, yahoo.com, hotmail.com, outlook.com, live.com, icloud.com, me.com, msn.com, aol.com, proton.me, protonmail.com, zoho.com, mail.com, gmx.com, yandex.com.
+Apply frontend and backend validation with helpful messages on registartion.
+3: Add Forget password on sign page, full feature comprehensively...
+4: Addd In footer Built by buildwithimran and put link of https://buildwithimran.online
+5: Add all rights reserved tubeai... 2026 dynamiclyy
+6: if i put link of video and backend successfully geenrated it summary,... you should be saved in history....
+7: After login, i saw Review link in sidebar, remove it from here and put itinto setting..
+8: Change FavIcon please...
+9: Not repeat fetures, like review and feedback.
+10: design a comprehensive short feature admin panel simple, not tooo much but simpler.
+11: Analyze evry point , fix step by step and verify two time each point.

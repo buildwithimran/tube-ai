@@ -1,0 +1,4 @@
+/* Settings styles — Tailwind utilities handle the visuals. */
+:host {
+  display: block;
+}

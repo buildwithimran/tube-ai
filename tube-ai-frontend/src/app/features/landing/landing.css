@@ -1,0 +1,5 @@
+/* Landing-specific styles. Layout/colors are handled by Tailwind utilities;
+   the animated aurora utility lives in global styles.css. */
+:host {
+  display: block;
+}

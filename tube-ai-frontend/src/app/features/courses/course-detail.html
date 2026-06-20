@@ -1,0 +1,53 @@
+<div class="mx-auto max-w-3xl">
+  @if (course(); as c) {
+    <!-- Header -->
+    <div class="card animate-fade-rise">
+      <div class="flex items-center gap-2 text-xs text-neutral-500">
+        <lucide-icon name="list-checks" class="h-4 w-4 text-brand-500"></lucide-icon> Course
+      </div>
+      <h1 class="mt-1 font-display text-2xl font-bold">{{ c.title }}</h1>
+      <p class="mt-1 text-sm text-neutral-500">{{ c.lessons.length }} lessons</p>
+      <div class="mt-3 h-2 overflow-hidden rounded-full bg-black/5 dark:bg-white/5">
+        <div class="h-full rounded-full bg-gradient-to-r from-brand-500 to-accent-500 transition-all" [style.width.%]="progress()"></div>
+      </div>
+      <p class="mt-1 text-xs text-neutral-500">{{ progress() }}% complete</p>
+    </div>
+
+    <!-- Syllabus -->
+    <div class="mt-5 space-y-2">
+      @for (lesson of c.lessons; track lesson.order) {
+        <div class="card flex items-center gap-3 p-3 animate-fade-rise">
+          <button type="button" (click)="toggle(lesson)"
+            class="grid h-7 w-7 shrink-0 place-items-center rounded-full border transition"
+            [class.border-emerald-500]="lesson.completed"
+            [class.bg-emerald-500]="lesson.completed"
+            [class.text-white]="lesson.completed"
+            [class.border-neutral-300]="!lesson.completed"
+            [attr.aria-label]="lesson.completed ? 'Mark incomplete' : 'Mark complete'">
+            @if (lesson.completed) { <lucide-icon name="check" class="h-4 w-4"></lucide-icon> }
+          </button>
+
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-sm font-medium" [class.text-neutral-400]="lesson.completed">
+              {{ lesson.order + 1 }}. {{ lesson.title || 'Lesson' }}
+            </p>
+            @if (lesson.durationText) {
+              <p class="text-xs text-neutral-500">{{ lesson.durationText }}</p>
+            }
+          </div>
+
+          <button type="button" (click)="startLesson(lesson)" class="btn btn-ghost shrink-0"
+            [disabled]="starting() !== null">
+            @if (starting() === lesson.order) {
+              <lucide-icon name="loader" class="h-4 w-4 animate-spin"></lucide-icon>
+            } @else {
+              <lucide-icon name="play" class="h-4 w-4"></lucide-icon> Start
+            }
+          </button>
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="text-sm text-neutral-500">Loading course…</p>
+  }
+</div>

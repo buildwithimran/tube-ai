@@ -1,0 +1,155 @@
+<div class="mx-auto max-w-3xl">
+  <!-- Video header -->
+  @if (video(); as v) {
+    <div class="card animate-fade-rise">
+      <div class="flex gap-4">
+        @if (v.thumbnailUrl) {
+          <img [src]="v.thumbnailUrl" alt="" class="hidden h-20 w-32 rounded-xl object-cover sm:block" />
+        }
+        <div class="min-w-0 flex-1">
+          <div class="flex items-start justify-between gap-2">
+            <h1 class="truncate font-display text-lg font-bold">{{ v.title || 'Your Learning Pack' }}</h1>
+            <button type="button" (click)="toggleFavorite()" aria-label="Favorite"
+              class="shrink-0 rounded-xl p-1.5 transition hover:bg-amber-400/10">
+              <lucide-icon name="star" class="h-5 w-5"
+                [class.text-amber-400]="isFavorite()" [class.fill-amber-400]="isFavorite()"
+                [class.text-neutral-400]="!isFavorite()"></lucide-icon>
+            </button>
+          </div>
+          <p class="text-sm text-neutral-500">{{ v.channel }}</p>
+          <div class="mt-2 flex flex-wrap gap-3 text-sm">
+            <a [href]="srtUrl()" download class="inline-flex items-center gap-1.5 text-brand-600 hover:underline">
+              <lucide-icon name="download" class="h-3.5 w-3.5"></lucide-icon> Subtitles
+            </a>
+            <button type="button" (click)="downloadThumb()" class="inline-flex items-center gap-1.5 text-brand-600 hover:underline">
+              <lucide-icon name="download" class="h-3.5 w-3.5"></lucide-icon> Thumbnail
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Study plan rail -->
+    <div class="mt-3 flex flex-wrap gap-2">
+      <span class="chip text-neutral-400"><lucide-icon name="notebook-pen" class="h-3 w-3"></lucide-icon> Day 1 · Read</span>
+      <span class="chip text-neutral-400"><lucide-icon name="brain" class="h-3 w-3"></lucide-icon> Day 2–3 · Review</span>
+      <span class="chip text-neutral-400"><lucide-icon name="list-checks" class="h-3 w-3"></lucide-icon> Day 4 · Quiz</span>
+    </div>
+  }
+
+  <!-- Tabs -->
+  <div class="glass mt-5 flex gap-1 overflow-x-auto rounded-2xl p-1">
+    @for (t of tabs; track t.id) {
+      <button type="button" (click)="select(t.id)" [class]="tabClass(t.id)">
+        <lucide-icon [name]="t.icon" class="h-4 w-4"></lucide-icon>{{ t.label }}
+      </button>
+    }
+  </div>
+
+  <div class="mt-5">
+    <!-- Shared loading / error states -->
+    @if (generating() === active()) {
+      <div class="card"><app-skeleton [lines]="6" /></div>
+    } @else if (error() && active() !== 'transcript') {
+      <app-error-state message="{{ error() }}" (retry)="retry()" />
+    }
+
+    <!-- NOTES -->
+    @if (active() === 'notes' && result('notes') && generating() !== 'notes') {
+      <article class="card animate-fade-rise"><app-markdown [content]="notesText()" /></article>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button type="button" class="btn btn-ghost" (click)="listen()">
+          <lucide-icon name="play" class="h-4 w-4"></lucide-icon> {{ tts.playing() ? 'Stop' : 'Listen' }}
+        </button>
+        <button type="button" class="btn btn-ghost" (click)="copyNotes()"><lucide-icon name="copy" class="h-4 w-4"></lucide-icon> Copy</button>
+        <button type="button" class="btn btn-ghost" (click)="exportPdf()"><lucide-icon name="download" class="h-4 w-4"></lucide-icon> PDF</button>
+        <button type="button" class="btn btn-ghost" (click)="exportMarkdown()"><lucide-icon name="download" class="h-4 w-4"></lucide-icon> .md</button>
+        <button type="button" class="btn btn-ghost" (click)="save()"><lucide-icon name="save" class="h-4 w-4"></lucide-icon> Save</button>
+        <button type="button" class="btn btn-ghost" (click)="regenerate()"><lucide-icon name="refresh-cw" class="h-4 w-4"></lucide-icon> Regenerate</button>
+      </div>
+    }
+
+    <!-- FLASHCARDS -->
+    @if (active() === 'flashcards' && cards().length && generating() !== 'flashcards') {
+      <div class="animate-fade-rise text-center">
+        <div class="text-xs text-neutral-500">Card {{ cardIndex() + 1 }} / {{ cards().length }}</div>
+        @if (currentCard(); as card) {
+          <button type="button" (click)="flip()"
+            class="card mx-auto mt-3 flex min-h-48 max-w-lg items-center justify-center text-center transition hover:shadow-glow">
+            <div>
+              <div class="text-xs uppercase tracking-wide text-neutral-400">{{ cardFlipped() ? 'Answer' : 'Question' }}</div>
+              <p class="mt-3 text-lg font-medium">{{ cardFlipped() ? card.back : card.front }}</p>
+              <p class="mt-4 text-xs text-neutral-500">Tap to flip</p>
+            </div>
+          </button>
+        }
+        <div class="mt-4 flex items-center justify-center gap-3">
+          <button type="button" class="btn btn-ghost" (click)="prevCard()" [disabled]="cardIndex() === 0" aria-label="Previous">
+            <lucide-icon name="chevron-left" class="h-4 w-4"></lucide-icon>
+          </button>
+          <button type="button" class="btn btn-ghost" (click)="nextCard()" [disabled]="cardIndex() === cards().length - 1" aria-label="Next">
+            <lucide-icon name="chevron-right" class="h-4 w-4"></lucide-icon>
+          </button>
+        </div>
+        <div class="mt-3 flex flex-wrap justify-center gap-2">
+          <button type="button" class="btn btn-primary" (click)="addToReview()"><lucide-icon name="layers" class="h-4 w-4"></lucide-icon> Add to review</button>
+          <button type="button" class="btn btn-ghost" (click)="exportAnki()"><lucide-icon name="download" class="h-4 w-4"></lucide-icon> Anki</button>
+          <button type="button" class="btn btn-ghost" (click)="save()"><lucide-icon name="save" class="h-4 w-4"></lucide-icon> Save</button>
+          <button type="button" class="btn btn-ghost" (click)="regenerate()"><lucide-icon name="refresh-cw" class="h-4 w-4"></lucide-icon> Regenerate</button>
+        </div>
+      </div>
+    }
+
+    <!-- QUIZ -->
+    @if (active() === 'quiz' && questions().length && generating() !== 'quiz') {
+      @if (quizDone()) {
+        <div class="card animate-fade-rise text-center">
+          <div class="text-5xl font-bold text-gradient">{{ score() }}/{{ questions().length }}</div>
+          <p class="mt-2 font-medium">
+            {{ score() === questions().length ? 'Perfect score! 🎉' : score() >= questions().length / 2 ? 'Nice work!' : 'Keep studying — review the notes.' }}
+          </p>
+          <div class="mt-5 flex justify-center gap-2">
+            <button type="button" class="btn btn-primary" (click)="restartQuiz()"><lucide-icon name="refresh-cw" class="h-4 w-4"></lucide-icon> Retake</button>
+            <button type="button" class="btn btn-ghost" (click)="save()"><lucide-icon name="save" class="h-4 w-4"></lucide-icon> Save</button>
+          </div>
+        </div>
+      } @else if (currentQ(); as q) {
+        <div class="animate-fade-rise">
+          <div class="text-xs text-neutral-500">Question {{ qIndex() + 1 }} / {{ questions().length }}</div>
+          <div class="card mt-2">
+            <p class="font-medium">{{ q.question }}</p>
+            <div class="mt-4 space-y-2">
+              @for (opt of q.options; track $index; let oi = $index) {
+                <button type="button" [class]="optionClass(oi, q.answerIndex)" (click)="answer(oi)">{{ opt }}</button>
+              }
+            </div>
+            @if (isAnswered(qIndex())) {
+              <p class="mt-3 flex gap-2 text-sm text-neutral-400">
+                <lucide-icon name="sparkles" class="mt-0.5 h-4 w-4 shrink-0 text-brand-400"></lucide-icon>{{ q.explanation }}
+              </p>
+              <button type="button" class="btn btn-primary mt-4" (click)="nextQuestion()">
+                {{ qIndex() < questions().length - 1 ? 'Next question' : 'See results' }}
+                <lucide-icon name="chevron-right" class="h-4 w-4"></lucide-icon>
+              </button>
+            }
+          </div>
+        </div>
+      }
+    }
+
+    <!-- TRANSCRIPT -->
+    @if (active() === 'transcript') {
+      @if (segments().length) {
+        <div class="card max-h-[60vh] space-y-2 overflow-y-auto text-sm animate-fade-rise">
+          @for (seg of segments(); track $index) {
+            <p><span class="mr-2 font-mono text-xs text-brand-400">{{ time(seg.start) }}</span>{{ seg.text }}</p>
+          }
+        </div>
+      } @else if (transcriptLoaded()) {
+        <p class="text-sm text-neutral-500">No transcript is available for this video.</p>
+      } @else {
+        <div class="card"><app-skeleton [lines]="8" /></div>
+      }
+    }
+  </div>
+</div>

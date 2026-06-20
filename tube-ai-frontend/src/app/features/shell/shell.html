@@ -1,0 +1,80 @@
+<div class="relative flex min-h-dvh">
+  <app-aurora-bg />
+
+  <!-- Sidebar (desktop) -->
+  <aside class="hidden w-60 shrink-0 border-r border-white/40 bg-white/50 p-4 backdrop-blur dark:border-white/8 dark:bg-white/[0.02] lg:block">
+    <a routerLink="/app" class="mb-6 flex items-center gap-2 font-display text-lg font-bold">
+      <span class="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-brand-600 to-accent-500 text-white">T</span>
+      TubeAi
+    </a>
+    <nav class="space-y-1">
+      @for (item of nav; track item.link) {
+        <a [routerLink]="item.link" routerLinkActive="bg-white/70 text-brand-600 shadow-sm dark:bg-white/8 dark:text-brand-300"
+          [routerLinkActiveOptions]="{ exact: item.link === '/app' }"
+          class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-neutral-600 transition hover:bg-white/60 dark:text-neutral-300 dark:hover:bg-white/5">
+          <lucide-icon [name]="item.icon" class="h-4 w-4"></lucide-icon>{{ item.label }}
+        </a>
+      }
+      @if (auth.isAdmin()) {
+        <a routerLink="/app/admin" routerLinkActive="bg-white/70 text-brand-600"
+          class="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-neutral-600 transition hover:bg-white/60 dark:text-neutral-300 dark:hover:bg-white/5">
+          <lucide-icon name="shield" class="h-4 w-4"></lucide-icon>Admin
+        </a>
+      }
+    </nav>
+  </aside>
+
+  <div class="flex min-w-0 flex-1 flex-col">
+    <!-- Topbar -->
+    <header class="flex items-center justify-between border-b border-white/40 bg-white/40 px-5 py-3 backdrop-blur dark:border-white/8 dark:bg-white/[0.02]">
+      <a routerLink="/app" class="font-display font-bold lg:hidden">TubeAi</a>
+      <div class="ml-auto flex items-center gap-2">
+        <button type="button" (click)="theme.toggle()" aria-label="Toggle theme"
+          class="rounded-xl p-2 text-neutral-500 transition hover:bg-white/60 dark:hover:bg-white/5">
+          <lucide-icon [name]="theme.dark() ? 'moon' : 'sun'" class="h-4 w-4"></lucide-icon>
+        </button>
+        <span class="hidden text-sm text-neutral-500 sm:block">{{ user()?.name }}</span>
+        <span class="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-brand-500 to-accent-500 text-sm font-semibold text-white">
+          {{ initial() }}
+        </span>
+        <button type="button" (click)="logout()"
+          class="rounded-xl px-3 py-1.5 text-sm text-neutral-600 transition hover:bg-white/60 dark:text-neutral-300 dark:hover:bg-white/5">
+          Log out
+        </button>
+      </div>
+    </header>
+
+    <!-- Email verification nudge -->
+    @if (user() && !user()!.emailVerified) {
+      <a routerLink="/verify"
+        class="flex items-center justify-center gap-2 bg-amber-400/15 px-4 py-2 text-center text-sm text-amber-700 transition hover:bg-amber-400/25 dark:text-amber-300">
+        <lucide-icon name="mail" class="h-4 w-4"></lucide-icon>
+        Verify your email to secure your account →
+      </a>
+    }
+
+    <main class="min-w-0 flex-1 p-5"><router-outlet /></main>
+
+    <!-- App footer (desktop) -->
+    <footer class="hidden flex-wrap items-center justify-center gap-x-2 gap-y-1 border-t border-white/40 px-5 py-4 text-center text-xs text-neutral-500 lg:flex dark:border-white/8">
+      <span>© {{ year }} TubeAi. All rights reserved.</span>
+      <span aria-hidden="true">·</span>
+      <span>
+        Built by
+        <a href="https://buildwithimran.online" target="_blank" rel="noopener noreferrer"
+          class="font-semibold text-brand-600 hover:underline dark:text-brand-400">buildwithimran</a>
+      </span>
+    </footer>
+
+    <!-- Bottom nav (mobile) -->
+    <nav class="grid grid-cols-4 border-t border-white/40 bg-white/60 backdrop-blur lg:hidden dark:border-white/8 dark:bg-white/[0.02]">
+      @for (item of nav; track item.link) {
+        <a [routerLink]="item.link" routerLinkActive="text-brand-600"
+          [routerLinkActiveOptions]="{ exact: item.link === '/app' }"
+          class="flex flex-col items-center gap-0.5 py-2 text-xs text-neutral-500">
+          <lucide-icon [name]="item.icon" class="h-4 w-4"></lucide-icon>{{ item.label }}
+        </a>
+      }
+    </nav>
+  </div>
+</div>
