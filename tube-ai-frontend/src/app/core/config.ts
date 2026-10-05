@@ -1,2 +1,5 @@
-/** API base URL. Swap per environment at build time if needed. */
-export const API_BASE = 'http://localhost:3035/api/v1';
+/** API base URL: the local backend during development, the deployed API otherwise. */
+export const API_BASE =
+  globalThis.location?.hostname === 'localhost'
+    ? 'http://localhost:3035/api/v1'
+    : 'https://tube-ai-api.buildwithimran.online/api/v1';

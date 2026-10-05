@@ -1,0 +1,75 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tube-ai-backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: tube-ai-backend
+    env:
+      DEPLOY_HOST: ${{ secrets.EC2_HOST }}
+      DEPLOY_USER: ${{ secrets.EC2_USER }}
+      RSH: ssh -i /home/runner/.ssh/deploy_key
+      HEALTH_URL: https://tube-ai-api.buildwithimran.online/health
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: tube-ai-backend/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Check build output
+        run: test -f dist/main.js
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "${{ secrets.EC2_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Upload
+        run: |
+          TARGET="$DEPLOY_USER@$DEPLOY_HOST:/var/www/tube-ai/backend"
+          rsync -az --delete -e "$RSH" dist/ "$TARGET/dist/"
+          rsync -az -e "$RSH" package.json pnpm-lock.yaml "$TARGET/"
+
+      - name: Install and reload
+        run: |
+          $RSH "$DEPLOY_USER@$DEPLOY_HOST" "set -e
+            cd /var/www/tube-ai/backend && pnpm install --prod --frozen-lockfile --config.strict-dep-builds=false
+            cd /var/www && pm2 startOrReload ecosystem.config.js --only tube-ai-api --update-env && pm2 save"
+
+      - name: Health check
+        run: |
+          for i in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$HEALTH_URL" || true)
+            if [ "$code" = "200" ]; then echo "healthy ($code)"; exit 0; fi
+            echo "attempt $i: $code"; sleep 5
+          done
+          $RSH "$DEPLOY_USER@$DEPLOY_HOST" "pm2 status; pm2 logs tube-ai-api --lines 60 --nostream"
+          exit 1

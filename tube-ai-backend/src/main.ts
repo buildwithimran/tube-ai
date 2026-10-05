@@ -17,7 +17,7 @@ async function bootstrap() {
 
   const config = app.get(ConfigService<AppConfig, true>);
   const port = config.get('port', { infer: true });
-  // const corsOrigins = config.get('corsOrigins', { infer: true });
+  const corsOrigins = config.get('corsOrigins', { infer: true });
 
   // --- Security headers (HSTS, frameguard, noSniff, etc.) -------------------
   app.use(
@@ -32,12 +32,9 @@ async function bootstrap() {
   app.use(cookieParser());
 
   // --- CORS with credentials (cookies travel cross-site) --------------------
-  // `origin: true` reflects whatever Origin the request came from, which allows
-  // ALL origins while staying compatible with credentials (cookies). A literal
-  // '*' is rejected by browsers when credentials:true, so we must reflect.
-  // TODO: lock this down to `config.get('corsOrigins')` before production.
+  // Only origins listed in CORS_ORIGINS may send credentialed requests.
   app.enableCors({
-    origin: true,
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-XSRF-TOKEN'],
