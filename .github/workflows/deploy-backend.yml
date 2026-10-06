@@ -37,7 +37,7 @@ jobs:
           cache-dependency-path: tube-ai-backend/pnpm-lock.yaml
 
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --config.strict-dep-builds=false
 
       - name: Build
         run: pnpm run build
