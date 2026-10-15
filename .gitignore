@@ -134,3 +134,32 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# ===== Extra ignores (added 2026-10-15) =====
+# AI tool folders
+.claude/
+.agents/
+.superpowers/
+.worktrees/
+skills-lock.json
+
+# Editor / OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Build caches
+.angular/
+.firebase/
+.nx/
+
+# Demo videos (videos under assets/ stay tracked)
+*.mp4
+*.mov
+*.webm
+*.mkv
+*.avi
+!**/assets/**/*.mp4
+!**/assets/**/*.mov
+!**/assets/**/*.webm
