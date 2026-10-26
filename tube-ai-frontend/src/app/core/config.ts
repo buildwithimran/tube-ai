@@ -2,4 +2,4 @@
 export const API_BASE =
   globalThis.location?.hostname === 'localhost'
     ? 'http://localhost:3035/api/v1'
-    : 'https://tube-ai-api.buildwithimran.online/api/v1';
+    : 'https://tube-ai-api.buildwithimran.pro/api/v1';

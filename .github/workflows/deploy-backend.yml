@@ -23,7 +23,7 @@ jobs:
       DEPLOY_HOST: ${{ secrets.EC2_HOST }}
       DEPLOY_USER: ${{ secrets.EC2_USER }}
       RSH: ssh -i /home/runner/.ssh/deploy_key
-      HEALTH_URL: https://tube-ai-api.buildwithimran.online/health
+      HEALTH_URL: https://tube-ai-api.buildwithimran.pro/health
     steps:
       - uses: actions/checkout@v4
 
